@@ -10,6 +10,7 @@ import tkinter as tk
 from tkinter import ttk
 from threading import Thread
 
+
 class DiscordThread(Thread):
     def __init__(self, root: tk.Tk, queue: Queue):
         super().__init__(daemon=True)
@@ -17,7 +18,7 @@ class DiscordThread(Thread):
         self.instance = dsdk.Discord(app_id, dsdk.CreateFlags.default)
         self.activity_manager = self.instance.get_activity_manager()
         self.root = root
-        
+
     def run(self):
         while True:
             time.sleep(5/10)
@@ -40,10 +41,11 @@ class DiscordThread(Thread):
     def callback(self, result):
         if result == dsdk.Result.ok:
             pass
-            #print("Activity Set!")
+            # print("Activity Set!")
         else:
             raise Exception(result)
-    
+
+
 class GUI(tk.Frame):
     def __init__(self, root: tk.Tk):
         # Tkinter window setup
@@ -64,11 +66,13 @@ class GUI(tk.Frame):
         self.artist_string = tk.StringVar(value="None")
 
         self.status_header = ttk.Label(self.root, text="Playback Status")
-        self.status_label = ttk.Label(self.root, textvariable=self.status_string)
+        self.status_label = ttk.Label(self.root,
+                                      textvariable=self.status_string)
         self.song_header = ttk.Label(self.root, text="Song")
         self.song_label = ttk.Label(self.root, textvariable=self.song_string)
         self.artist_header = ttk.Label(self.root, text="Artist")
-        self.artist_label = ttk.Label(self.root, textvariable=self.artist_string)
+        self.artist_label = ttk.Label(self.root,
+                                      textvariable=self.artist_string)
 
         self.root.bind("<<UpdateEvent>>", self.update_strings)
 
@@ -89,7 +93,8 @@ class GUI(tk.Frame):
             self.artist_string = media_info['artist']
             self.queue.task_done()
 
-if __name__ == "__main__":    
+
+if __name__ == "__main__":
     root = tk.Tk()
     GUI(root)
     root.mainloop()
