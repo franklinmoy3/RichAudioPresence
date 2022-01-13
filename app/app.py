@@ -1,6 +1,7 @@
 import asyncio
 from queue import Queue
 import time
+import webbrowser
 
 from secrets import app_id, small_image_key, large_image_key
 import discordsdk as dsdk
@@ -20,7 +21,7 @@ class DiscordThread(Thread):
         self.root = root
 
     def run(self):
-        """Override of Thread.run method"""
+        """Entry point for this thread after __init__"""
         while True:
             time.sleep(5 / 10)
             self.update_activity()
@@ -53,32 +54,79 @@ class DiscordThread(Thread):
             raise Exception(result)
 
 
-class RootSetup:
-    """Class that sets up the root tkinter window"""
+class SettingsWindow(tk.Toplevel):
+    """Class definition for the Settings window"""
 
-    def __init__(self, root: tk.Tk):
-        self.root = root
+    def __init__(self, parent: tk.Tk):
+        super().__init__(parent)
+        self.parent = parent
 
-        root.title("Rich Audio Presence")
-        root.resizable(width=False, height=False)
+        self.title("Settings")
+        self.resizable(width=False, height=False)
+
+        self.border = ttk.Frame(self, borderwidth=5, relief="ridge", width=250, height=250)
+        self.border.pack()
+
+        self.header_label = ttk.Label(self.border, text="Settings", font="TkDefaultFont 16 bold", justify=tk.LEFT)
+        self.header_label.grid(row=0, column=0, columnspan=3)
+
+
+class AboutWindow(tk.Toplevel):
+    """Class definition for the About window"""
+
+    def __init__(self, parent: tk.Tk):
+        super().__init__(parent)
+        self.parent = parent
+
+        self.title("About")
+        self.resizable(width=False, height=False)
+
+        self.border = ttk.Frame(
+            self, borderwidth=5, relief="ridge", width=250, height=250
+        )
+        self.border.pack()
+
+        self.header_label = ttk.Label(
+            self.border, text="Rich Audio Presence", font="TkDefaultFont 16 bold", justify=tk.LEFT
+        )
+        self.header_label.grid(row=0, column=0, columnspan=4)
+        self.version_label = ttk.Label(
+            self.border, text="v0.7.0", font="TkDefaultFont 14", justify=tk.LEFT
+        )
+        self.version_label.grid(row=1, column=0)
+
+
+class Root(tk.Tk):
+    """Class definition the root tkinter window"""
+
+    def __init__(self):
+        super().__init__()
+
+        self.title("RAP")
+        self.resizable(width=False, height=False)
 
         # Menu bar
-        menu_bar = tk.Menu(root)
-        root["menu"] = menu_bar
+        menu_bar = tk.Menu(self)
+        self["menu"] = menu_bar
 
         file_menu = tk.Menu(menu_bar, tearoff=0)
-        file_menu.add_command(label="Settings")
-        file_menu.add_command(label="Exit", command=root.quit)
+        file_menu.add_command(label="Settings", command=self.open_settings_window)
+        file_menu.add_command(label="Exit", command=self.quit)
         menu_bar.add_cascade(menu=file_menu, label="File")
 
         help_menu = tk.Menu(menu_bar, tearoff=0)
-        help_menu.add_command(label="Manual")
-        help_menu.add_command(label="About")
+        help_menu.add_command(
+            label="Manual",
+            command=lambda: webbrowser.open(
+                "https://github.com/franklinmoy3/RichAudioPresence"
+            ),
+        )
+        help_menu.add_command(label="About", command=self.open_about_window)
         menu_bar.add_cascade(menu=help_menu, label="Help")
 
         # Frame layout
         root_frame = ttk.Frame(
-            root, borderwidth=5, relief="ridge", width=400, height=400
+            self, borderwidth=5, relief="ridge", width=400, height=400
         )
         root_frame.grid(row=0, column=0)
 
@@ -86,15 +134,15 @@ class RootSetup:
         status_header = ttk.Label(
             root_frame, text="Playback Status", font="TkDefaultFont 16 bold"
         )
-        self.status_string = tk.StringVar(value="No Active Media")
+        self.status_string = tk.StringVar(value="Starting...")
         self.status_box = ttk.Entry(
             root_frame,
             textvariable=self.status_string,
             state=tk.DISABLED,
             justify=tk.CENTER,
         )
-        status_header.grid(row=0, column=0, padx=15, pady=15)
-        self.status_box.grid(row=1, column=2, columnspan=6, padx=15, pady=15)
+        status_header.grid(row=0, column=0, padx=15, pady=10)
+        self.status_box.grid(row=1, column=0, columnspan=6, padx=15, pady=5)
 
         song_header = ttk.Label(root_frame, text="Song", font="TkDefaultFont 16 bold")
         self.song_string = tk.StringVar()
@@ -104,8 +152,8 @@ class RootSetup:
             state=tk.DISABLED,
             justify=tk.CENTER,
         )
-        song_header.grid(row=2, column=0, padx=15, pady=15)
-        self.song_box.grid(row=3, column=2, columnspan=6, padx=15, pady=15)
+        song_header.grid(row=2, column=0, padx=15, pady=10)
+        self.song_box.grid(row=3, column=0, columnspan=6, padx=15, pady=5)
 
         artist_header = ttk.Label(
             root_frame, text="Artist", font="TkDefaultFont 16 bold"
@@ -117,15 +165,15 @@ class RootSetup:
             state=tk.DISABLED,
             justify=tk.CENTER,
         )
-        artist_header.grid(row=4, column=0, padx=15, pady=15)
-        self.artist_box.grid(row=5, column=2, columnspan=6, padx=15, pady=15)
+        artist_header.grid(row=4, column=0, padx=15, pady=10)
+        self.artist_box.grid(row=5, column=0, columnspan=6, padx=15, pady=5)
 
         # Set up bindings
-        root.bind("<<UpdateEvent>>", self.update_strings)
+        self.bind("<<UpdateEvent>>", self.update_strings)
 
         # Create shared queue and separate thread for discord updater
         self.queue = Queue()
-        discord_thread = DiscordThread(root, self.queue)
+        discord_thread = DiscordThread(self, self.queue)
         discord_thread.start()
 
     def update_strings(self, event):
@@ -141,8 +189,19 @@ class RootSetup:
             self.artist_string.set(media_info["artist"])
             self.queue.task_done()
 
+    def open_about_window(self):
+        """Routine that opens an About window"""
+        AboutWindow(self)
+
+    def open_settings_window(self):
+        """Routine that opens a Settings window"""
+        SettingsWindow(self)
+
+
+def main():
+    root = Root()
+    root.mainloop()
+
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    RootSetup(root)
-    root.mainloop()
+    main()
