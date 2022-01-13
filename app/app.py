@@ -64,10 +64,14 @@ class SettingsWindow(tk.Toplevel):
         self.title("Settings")
         self.resizable(width=False, height=False)
 
-        self.border = ttk.Frame(self, borderwidth=5, relief="ridge", width=250, height=250)
+        self.border = ttk.Frame(
+            self, borderwidth=5, relief="ridge", width=250, height=250
+        )
         self.border.pack()
 
-        self.header_label = ttk.Label(self.border, text="Settings", font="TkDefaultFont 16 bold", justify=tk.LEFT)
+        self.header_label = ttk.Label(
+            self.border, text="Settings", font="TkDefaultFont 16 bold", justify=tk.LEFT
+        )
         self.header_label.grid(row=0, column=0, columnspan=3)
 
 
@@ -87,7 +91,10 @@ class AboutWindow(tk.Toplevel):
         self.border.pack()
 
         self.header_label = ttk.Label(
-            self.border, text="Rich Audio Presence", font="TkDefaultFont 16 bold", justify=tk.LEFT
+            self.border,
+            text="Rich Audio Presence",
+            font="TkDefaultFont 16 bold",
+            justify=tk.LEFT,
         )
         self.header_label.grid(row=0, column=0, columnspan=4)
         self.version_label = ttk.Label(
