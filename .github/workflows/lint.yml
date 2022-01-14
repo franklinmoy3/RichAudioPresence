@@ -5,9 +5,11 @@ name: Lint Build
 
 on:
   push:
-    branches: [ master ]
+    branches: 
+      - '**'
   pull_request:
-    branches: [ master ]
+    branches: 
+      - 'master'
 
 jobs:
   build:
@@ -35,3 +37,4 @@ jobs:
           black: true
           auto_fix: true
           git_email: "franklinmoy3@gmail.com"
+          commit_message: "GH Action: Fix code style issues with ${linter}"
